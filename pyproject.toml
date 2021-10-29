@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "yolov4-deepsort"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8, <3.11"
+tqdm = "^4.62.3"
+opencv-python = "4.1.*"
+lxml = "^4.6.3"
+Pillow = "^8.4.0"
+matplotlib = "^3.4.3"
+absl-py = "^0.15.0"
+easydict = "^1.9"
+tensorflow = "2.3.0"
+pandas = "1.2-*"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+flake8 = "^4.0.1"
+pycodestyle = "^2.8.0"
+mypy = "^0.910"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
