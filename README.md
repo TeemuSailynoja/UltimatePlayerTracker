@@ -1,10 +1,18 @@
 # UltimatePlayerTracker
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
-Object tracking implemented with YOLOv4, DeepSort, and TensorFlow. YOLOv4 is a state of the art algorithm that uses deep convolutional neural networks to perform object detections. We can take the output of YOLOv4 feed these object detections into Deep SORT (Simple Online and Realtime Tracking with a Deep Association Metric) in order to create a highly accurate object tracker.
+Tracking of players on the field for Ultimate. 
+This project is based on a more general workflow of object tracking implemented with YOLOv4, DeepSort, and TensorFlow. YOLOv4 is an algorithm that uses deep convolutional neural networks for object detections. These detections are then fed to into DeepSORT (Simple Online and Realtime Tracking with a Deep Association Metric) in order to create a highly accurate object tracker.
+
+## Work in progress
+This project is currently at a proof of consept stage. The algorithm is more tuned for tracking pedestrians and would benefit from finetuning to the players actively making fakes. Also, we could achieve a much better performance of staying on playes, if we leverage the fact thast there are always sa set number of players on field for any given point.
+
+Some first steps for the project could be
+  - Obtaining automatic video processing by recognising where a point ends and another starts.
+  - Automated labelling for points; offence, defence, break, etc.
+  - Statistics that also contain information on the movements of off-disc players -- most current apps for statistics tracking focus on the movement of the  disc, and completion raters of throwers.
 
 ## Getting Started
-To get started, install the proper dependencies either via Anaconda or Pip. I recommend Anaconda route for people using a GPU as it configures CUDA toolkit version for you.
+First, install the project dependencies with either Anaconda or Pip. I recommend Anaconda route for people using a GPU as it configures the CUDA toolkit version for you.
 
 ### Conda (Recommended)
 
@@ -32,10 +40,11 @@ Make sure to use CUDA Toolkit version 10.1 as it is the proper version for the T
 https://developer.nvidia.com/cuda-10.1-download-archive-update2
 
 ## Downloading Official YOLOv4 Pre-trained Weights
-Our object tracker uses YOLOv4 to make the object detections, which deep sort then uses to track. There exists an official pre-trained YOLOv4 object detector model that is able to detect 80 classes. For easy demo purposes we will use the pre-trained weights for our tracker.
-Download pre-trained yolov4.weights file: https://drive.google.com/open?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT
+Our object tracker uses YOLOv4 for making the player (and in the future disc) detections. There exists an official pre-trained YOLOv4 object detector model that is able to detect 80 classes. For easy demo purposes we will use the pre-trained weights for our tracker.
 
-Copy and paste yolov4.weights from your downloads folder into the 'data' folder of this repository.
+Download `yolov4.weights` file 245 MB: [yolov4.weights](https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights) (Google-drive mirror [yolov4.weights](https://drive.google.com/open?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT) )
+
+Place the yolov4.weights file into the 'data' folder of this repository.
 
 If you want to use yolov4-tiny.weights, a smaller model that is faster at running detections but less accurate, the weights are already included in the 'data' folder.
 
@@ -46,15 +55,15 @@ To implement the object tracking using YOLOv4, first we convert the .weights int
 python save_model.py --model yolov4 
 
 # Run yolov4 deep sort object tracker on video
-python object_tracker.py --video ./data/video/test.mp4 --output ./outputs/demo.avi --model yolov4
+python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
 
 # Run yolov4 deep sort object tracker on webcam (set video flag to 0)
 python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
 ```
-The output flag allows you to save the resulting video of the object tracker running so that you can view it again later. Video will be saved to the path that you set. (outputs folder is where it will be if you run the above command!)
+The ``--output`` flag saves the resulting video of the object tracker to the specified location.
 
 ## Running the Tracker with YOLOv4-Tiny
-The following commands will allow you to run yolov4-tiny model. Yolov4-tiny allows you to obtain a higher speed (FPS) for the tracker at a slight cost to accuracy. Make sure that you have downloaded the tiny weights file and added it to the 'data' folder in order for commands to work!
+The following commands allow you to run the yolov4-tiny model. Yolov4-tiny allows you to obtain a higher speed (FPS) for the tracker at a slight cost to accuracy. Make sure that you have downloaded the tiny weights file and added it to the 'data' folder in order for commands to work!
 ```
 # save yolov4-tiny model
 python save_model.py --weights ./data/yolov4-tiny.weights --output ./checkpoints/yolov4-tiny-416 --model yolov4 --tiny
@@ -64,7 +73,7 @@ python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 
 ```
 
 ## Resulting Video
-As mentioned above, the resulting video will save to wherever you set the ``--output`` command line flag path to. I always set it to save to the 'outputs' folder. You can also change the type of video saved by adjusting the ``--output_format`` flag, by default it is set to AVI codec which is XVID.
+The resulting video will be saved to where you set the ``--output`` command line flag path to. You can also change the format of the video saved with the ``--output_format`` flag, by default it is set to AVI codec which is XVID.
 
 ## Command Line Args Reference
 
@@ -114,9 +123,9 @@ save_model.py:
     (default: False)
 ```
 
-### References  
+### Aknowledgements 
 
-   Huge shoutout goes to TheAiGuy for putting together the repository this project is biult on. We also thank hunglc007 and nwojke for creating the backbones of that repository:
+   I want to thank TheAiGuy for his repository introducing the deepsort algorithm for object tracking using Yolov4. I also thank hunglc007 and nwojke whose work that repository is based upon:
   * [yolov4-deepsort](https://github.com/theAIGuysCode/yolov4-deepsort)
   * [tensorflow-yolov4-tflite](https://github.com/hunglc007/tensorflow-yolov4-tflite)
   * [Deep SORT Repository](https://github.com/nwojke/deep_sort)
