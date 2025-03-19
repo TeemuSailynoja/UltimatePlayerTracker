@@ -8,10 +8,10 @@ YOLOv4 serves as the detection backbone for the DeepSORT framework. It provides 
 
 - **`backbone.py`**: Implements the feature extraction backbone of YOLOv4.
 - **`common.py`**: Houses shared utility functions and reusable components.
-- **`config.py`**: Contains configuration settings such as model parameters and dataset paths.
-- **`dataset.py`**: Manages dataset loading and preprocessing for training and evaluation.
-- **`utils.py`**: Provides helper functions for tasks like plotting, logging, and non-max suppression.
-- **`yolov4.py`**: The main implementation file for the YOLOv4 model, including architecture, training, and inference.
+- **`config.py`**: Contains configuration settings, including model parameters, dataset paths, training hyperparameters, and testing options.
+- **`dataset.py`**: Manages dataset loading, preprocessing, and annotation parsing for training and evaluation.
+- **`utils.py`**: Provides helper functions for bounding box manipulation, image preprocessing, post-detection filtering, and model layer management.
+- **`yolov4.py`**: The main implementation file for the YOLOv4 model, including the architecture, training utilities, and components required for both training and inference workflows.
 
 ## Role in the Project
 

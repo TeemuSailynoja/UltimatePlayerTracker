@@ -11,9 +11,34 @@ from core.config import cfg
 
 
 class Dataset(object):
-    """implement Dataset here"""
 
     def __init__(self, FLAGS, is_training: bool, dataset_type: str = "converted_coco"):
+    """
+    Initializes the Dataset class with configuration parameters and loads annotations.
+
+    Parameters:
+    - FLAGS (Namespace): Configuration flags containing model details (e.g., tiny YOLO, paths, etc.).
+    - is_training (bool): Indicates whether the dataset is for training or testing.
+    - dataset_type (str, optional): Specifies the dataset type (default is "converted_coco").
+
+    Attributes:
+    - tiny (bool): Determines whether a tiny version of YOLO is used.
+    - strides (list), anchors (list), NUM_CLASS (int), XYSCALE (list): Model-specific parameters loaded from FLAGS.
+    - dataset_type (str): Stores the type of dataset being used.
+    - annot_path (str): Path to annotation files (training or testing based on is_training).
+    - input_sizes (int): Input image size.
+    - batch_size (int): Number of samples per batch.
+    - data_aug (bool): Flag for applying data augmentation.
+    - train_input_sizes (int): Training-specific input sizes.
+    - classes (dict): Mapping of class IDs to names.
+    - num_classes (int): Total number of classes in the dataset.
+    - anchor_per_scale (int): Number of anchors per scale.
+    - max_bbox_per_scale (int): Maximum number of bounding boxes per scale.
+    - annotations (list): List of parsed annotations from the dataset.
+    - num_samples (int): Total number of samples in the dataset.
+    - num_batchs (int): Total number of batches (computed from samples and batch size).
+    - batch_count (int): Counter for tracking current batch during iteration.
+    """
         self.tiny = FLAGS.tiny
         self.strides, self.anchors, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
         self.dataset_type = dataset_type
@@ -35,6 +60,27 @@ class Dataset(object):
         self.batch_count = 0
 
     def load_annotations(self):
+    """
+    Loads and parses annotation data from the specified annotation file.
+
+    Depending on the dataset type (`converted_coco` or `yolo`), this method processes
+    annotations differently. The annotations include image paths and bounding box details,
+    which are used for object detection.
+
+    Returns:
+    - annotations (list): A list of annotation strings. Each string represents an image 
+      path followed by the bounding box details in the format:
+      "x_min,y_min,x_max,y_max,class_id", where:
+        - x_min, y_min: Top-left corner coordinates of the bounding box.
+        - x_max, y_max: Bottom-right corner coordinates of the bounding box.
+        - class_id: The class index of the detected object.
+
+    Notes:
+    - For `converted_coco`, lines with valid annotations are directly added to the list.
+    - For `yolo`, annotations are constructed by reading bounding box data from
+      accompanying `.txt` files, transforming YOLO format to the required format.
+    - Shuffles the annotation list to randomize the data order.
+    """
         with open(self.annot_path, "r") as f:
             txt = f.readlines()
             if self.dataset_type == "converted_coco":
@@ -73,6 +119,39 @@ class Dataset(object):
         return self
 
     def __next__(self):
+    """
+    Generates the next batch of data for training or testing.
+
+    This method creates batches of images, labels, and bounding box targets for
+    the model. It preprocesses the data for three different scales (small, medium,
+    and large) used in YOLOv4.
+
+    Returns:
+    - batch_image (np.ndarray): A batch of images with shape 
+      (batch_size, input_size, input_size, 3).
+    - batch_targets (tuple): A tuple containing targets for three scales:
+        - batch_smaller_target: (batch_label_sbbox, batch_sbboxes)
+        - batch_medium_target: (batch_label_mbbox, batch_mbboxes)
+        - batch_larger_target: (batch_label_lbbox, batch_lbboxes)
+
+      Each scale includes:
+      - batch_label_sbbox (np.ndarray): Label tensor for the smaller scale.
+      - batch_sbboxes (np.ndarray): Bounding boxes tensor for the smaller scale.
+      - The same structure applies to `batch_label_mbbox` / `batch_mbboxes` and 
+        `batch_label_lbbox` / `batch_lbboxes` for medium and large scales.
+
+    Raises:
+    - StopIteration: If all batches in the current epoch have been processed. 
+      The annotations are shuffled, and the batch counter is reset for the next epoch.
+
+    Notes:
+    - Creates zero-initialized arrays for images, labels, and bounding boxes and 
+      populates them by processing annotations via `parse_annotation()` and 
+      `preprocess_true_boxes()`.
+    - Works on CPU (`/cpu:0`) to avoid GPU memory issues.
+    - Resets the batch counter when all data is processed and shuffles annotations for 
+      the next epoch.
+    """
         with tf.device("/cpu:0"):
             # self.train_input_size = random.choice(self.train_input_sizes)
             self.train_input_size = cfg.TRAIN.INPUT_SIZE
@@ -236,6 +315,39 @@ class Dataset(object):
         return image, bboxes
 
     def parse_annotation(self, annotation):
+    """
+    Parses a single annotation entry to load and preprocess the corresponding image 
+    and bounding boxes.
+
+    Parameters:
+    - annotation (str): A string containing the image path and bounding box data. 
+      The format depends on `dataset_type`:
+        - For "converted_coco": "image_path x_min,y_min,x_max,y_max,class_id ..."
+        - For "yolo": "image_path x_center,y_center,width,height,class_id ..."
+
+    Returns:
+    - image (np.ndarray): The preprocessed image as a NumPy array with dimensions 
+      [self.train_input_size, self.train_input_size, 3].
+    - bboxes (np.ndarray): The preprocessed bounding boxes as a NumPy array. Each bounding 
+      box is represented in the format [x_min, y_min, x_max, y_max, class_id].
+
+    Raises:
+    - KeyError: If the specified image file does not exist.
+
+    Notes:
+    - Bounding Box Transformation:
+        - For "converted_coco", bounding boxes are directly read as integers.
+        - For "yolo", bounding boxes are initially in YOLO format and are transformed to
+          corner coordinates using the image dimensions.
+    - Data Augmentation:
+        - If `self.data_aug` is True, applies random horizontal flip, cropping, and 
+          translation to the image and bounding boxes.
+    - Image Preprocessing:
+        - Converts the image from BGR (OpenCV default) to RGB.
+        - Resizes the image and adjusts bounding boxes to match the target input size 
+          using `utils.image_preprocess`.
+
+    """
         line = annotation.split()
         image_path = line[0]
         if not os.path.exists(image_path):
@@ -263,6 +375,40 @@ class Dataset(object):
         return image, bboxes
 
     def preprocess_true_boxes(self, bboxes):
+    """
+    Prepares ground-truth bounding boxes for use in the YOLOv4 model.
+
+    This method processes the input bounding boxes to create label tensors for
+    three scales (small, medium, and large) and assigns each bounding box to the
+    most appropriate anchor based on Intersection Over Union (IoU) values.
+
+    Parameters:
+    - bboxes (np.ndarray): A NumPy array containing ground-truth bounding boxes, where
+      each box is represented as [x_min, y_min, x_max, y_max, class_id].
+
+    Returns:
+    - label_sbbox (np.ndarray): Label tensor for the small-scale feature map.
+    - label_mbbox (np.ndarray): Label tensor for the medium-scale feature map.
+    - label_lbbox (np.ndarray): Label tensor for the large-scale feature map.
+    - sbboxes (np.ndarray): Bounding boxes assigned to the small-scale feature map.
+    - mbboxes (np.ndarray): Bounding boxes assigned to the medium-scale feature map.
+    - lbboxes (np.ndarray): Bounding boxes assigned to the large-scale feature map.
+
+    Notes:
+    - Each `label` tensor has the shape 
+      [feature_map_size, feature_map_size, anchor_per_scale, 5 + num_classes],
+      where the last dimension includes:
+        - [x_center, y_center, width, height, objectness_score, class_onehot_vector].
+    - Smooth Labeling:
+        - Applies label smoothing to reduce overconfidence in class probabilities.
+    - IoU Assignment:
+        - Assigns bounding boxes to anchors based on IoU. If no anchor exceeds the IoU
+          threshold (0.3), the best anchor is selected.
+    - Bounding Box Transformation:
+        - Converts bounding boxes from corner coordinates [x_min, y_min, x_max, y_max]
+          to center coordinates [x_center, y_center, width, height].
+
+    """
         label = [
             np.zeros(
                 (
