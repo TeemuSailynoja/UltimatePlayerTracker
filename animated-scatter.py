@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
+import cv2
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import cv2
 
 ## These are some hard coded values for data/demo.avi
 # We make a transformation form the camera angle to a
@@ -40,7 +40,7 @@ class AnimatedScatter:
 
     def data_stream(self):
         """Create an iterator, that return the next frame in the animaton."""
-        for idx, row in self.data.iterrows():
+        for _idx, row in self.data.iterrows():
             xy = cv2.perspectiveTransform(
                 # Create a 2D np array with the x-y coordinates of each player in the frame.
                 np.nan_to_num(
@@ -63,7 +63,7 @@ class AnimatedScatter:
                 xy[:, 0],
                 xy[:, 1],
                 [0.5] * (len(row) // 2),
-                range((len(row) // 2)),
+                range(len(row) // 2),
             ]
 
     def update(self, i):

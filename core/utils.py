@@ -1,8 +1,10 @@
-import cv2
-import random
 import colorsys
+import random
+
+import cv2
 import numpy as np
 import tensorflow as tf
+
 from core.config import cfg
 
 
@@ -66,8 +68,8 @@ def load_weights(model, weights_file, model_name="yolov4", tiny=False):
 
     j = 0
     for i in range(layer_size):
-        conv_layer_name = "conv2d_%d" % i if i > 0 else "conv2d"
-        bn_layer_name = "batch_normalization_%d" % j if j > 0 else "batch_normalization"
+        conv_layer_name = f"conv2d_{i}" if i > 0 else "conv2d"
+        bn_layer_name = f"batch_normalization_{j}" if j > 0 else "batch_normalization"
 
         conv_layer = model.get_layer(conv_layer_name)
         filters = conv_layer.filters
@@ -113,7 +115,7 @@ def read_class_names(class_file_name):
       values are the corresponding class names.
     """
     names = {}
-    with open(class_file_name, "r") as data:
+    with open(class_file_name) as data:
         for ID, name in enumerate(data):
             names[ID] = name.strip("\n")
     return names
@@ -285,13 +287,11 @@ def draw_bbox(
 
         if info:
             print(
-                "Object found: {}, Confidence: {:.2f}, BBox Coords (xmin, ymin, width, height): {}, {}, {}, {} ".format(
-                    class_name, score, x, y, w, h
-                )
+                f"Object found: {class_name}, Confidence: {score:.2f}, BBox Coords (xmin, ymin, width, height): {x}, {y}, {w}, {h} "
             )
 
         if show_label:
-            bbox_mess = "%s: %.2f" % (class_name, score)
+            bbox_mess = f"{class_name}: {score:.2f}"
             t_size = cv2.getTextSize(
                 bbox_mess, 0, fontScale, thickness=bbox_thick // 2
             )[0]

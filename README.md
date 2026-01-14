@@ -12,9 +12,22 @@ Some first steps for the project could be
   - Statistics that also contain information on the movements of off-disc players -- most current apps for statistics tracking focus on the movement of the  disc, and completion raters of throwers.
 
 ## Getting Started
-First, install the project dependencies with either Anaconda or Pip. I recommend Anaconda route for people using a GPU as it configures the CUDA toolkit version for you.
+First, install project dependencies using Pixi (recommended) or the legacy methods.
 
-### Conda (Recommended)
+### Pixi (Recommended - Modern)
+
+```bash
+# Install Pixi package manager (if not already installed)
+curl -fsSL https://pixi.sh/install.sh | bash
+
+# Install all dependencies
+pixi install
+
+# Activate the environment
+pixi shell
+```
+
+### Conda (Legacy)
 
 ```bash
 # Tensorflow CPU
@@ -24,6 +37,16 @@ conda activate yolov4-cpu
 # Tensorflow GPU
 conda env create -f conda-gpu.yml
 conda activate yolov4-gpu
+```
+
+### Pip (Legacy)
+(TensorFlow 2 packages require a pip version >19.0.)
+```bash
+# TensorFlow CPU
+pip install -r requirements.txt
+
+# TensorFlow GPU
+pip install -r requirements-gpu.txt
 ```
 
 ### Pip
@@ -52,13 +75,16 @@ If you want to use yolov4-tiny.weights, a smaller model that is faster at runnin
 To implement the object tracking using YOLOv4, first we convert the .weights into the corresponding TensorFlow model which will be saved to a checkpoints folder. Then all we need to do is run the object_tracker.py script to run our object tracker with YOLOv4, DeepSort and TensorFlow.
 ```bash
 # Convert darknet weights to tensorflow model
-python save_model.py --model yolov4 
+pixi run save-model
 
 # Run yolov4 deep sort object tracker on video
-python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
+pixi run run-tracker
 
 # Run yolov4 deep sort object tracker on webcam (set video flag to 0)
-python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
+pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
+
+# Or use traditional Python calls
+python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
 ```
 The ``--output`` flag saves the resulting video of the object tracker to the specified location.
 

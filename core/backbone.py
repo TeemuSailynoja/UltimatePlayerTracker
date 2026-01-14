@@ -1,7 +1,7 @@
 #! /usr/bin/env python
-# coding=utf-8
 
 import tensorflow as tf
+
 import core.common as common
 
 
@@ -52,7 +52,6 @@ def darknet53(input_data):
 
 
 def cspdarknet53(input_data):
-
     input_data = common.convolutional(input_data, (3, 3, 3, 32), activate_type="mish")
     input_data = common.convolutional(
         input_data, (3, 3, 32, 64), downsample=True, activate_type="mish"

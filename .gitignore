@@ -1,3 +1,6 @@
 __pycache__*
 yolov4.weights
 checkpoints*
+# pixi environments
+.pixi/*
+!.pixi/config.toml
