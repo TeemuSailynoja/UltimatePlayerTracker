@@ -94,9 +94,9 @@ def save_trt():
     for n in trt_graph.node:
         print(n.op)
         if n.op == "TRTEngineOp":
-            print("Node: %s, %s" % (n.op, n.name.replace("/", "_")))
+            print(f"Node: {n.op}, {n.name.replace('/', '_')}")
         else:
-            print("Exclude Node: %s, %s" % (n.op, n.name.replace("/", "_")))
+            print(f"Exclude Node: {n.op}, {n.name.replace('/', '_')}")
     logging.info(f"model saved to: {FLAGS.output}")
 
     trt_engine_nodes = len([1 for n in trt_graph.node if str(n.op) == "TRTEngineOp"])

@@ -40,7 +40,7 @@ class AnimatedScatter:
 
     def data_stream(self):
         """Create an iterator, that return the next frame in the animaton."""
-        for idx, row in self.data.iterrows():
+        for _idx, row in self.data.iterrows():
             xy = cv2.perspectiveTransform(
                 # Create a 2D np array with the x-y coordinates of each player in the frame.
                 np.nan_to_num(

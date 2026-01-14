@@ -68,8 +68,8 @@ def load_weights(model, weights_file, model_name="yolov4", tiny=False):
 
     j = 0
     for i in range(layer_size):
-        conv_layer_name = "conv2d_%d" % i if i > 0 else "conv2d"
-        bn_layer_name = "batch_normalization_%d" % j if j > 0 else "batch_normalization"
+        conv_layer_name = f"conv2d_{i}" if i > 0 else "conv2d"
+        bn_layer_name = f"batch_normalization_{j}" if j > 0 else "batch_normalization"
 
         conv_layer = model.get_layer(conv_layer_name)
         filters = conv_layer.filters
@@ -291,7 +291,7 @@ def draw_bbox(
             )
 
         if show_label:
-            bbox_mess = "%s: %.2f" % (class_name, score)
+            bbox_mess = f"{class_name}: {score:.2f}"
             t_size = cv2.getTextSize(
                 bbox_mess, 0, fontScale, thickness=bbox_thick // 2
             )[0]
