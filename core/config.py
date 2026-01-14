@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# coding=utf-8
 from easydict import EasyDict as edict
 
 # Create a configuration dictionary using EasyDict for a flexible and hierarchical structure

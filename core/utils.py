@@ -1,8 +1,10 @@
-import cv2
-import random
 import colorsys
+import random
+
+import cv2
 import numpy as np
 import tensorflow as tf
+
 from core.config import cfg
 
 
@@ -113,7 +115,7 @@ def read_class_names(class_file_name):
       values are the corresponding class names.
     """
     names = {}
-    with open(class_file_name, "r") as data:
+    with open(class_file_name) as data:
         for ID, name in enumerate(data):
             names[ID] = name.strip("\n")
     return names
@@ -285,9 +287,7 @@ def draw_bbox(
 
         if info:
             print(
-                "Object found: {}, Confidence: {:.2f}, BBox Coords (xmin, ymin, width, height): {}, {}, {}, {} ".format(
-                    class_name, score, x, y, w, h
-                )
+                f"Object found: {class_name}, Confidence: {score:.2f}, BBox Coords (xmin, ymin, width, height): {x}, {y}, {w}, {h} "
             )
 
         if show_label:

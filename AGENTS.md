@@ -10,49 +10,55 @@ UltimatePlayerTracker is a Python-based object tracking system for Ultimate fris
 
 ### Environment Setup
 ```bash
-# Install dependencies (Poetry is the preferred package manager)
-pip install poetry
-poetry install
+# Install Pixi package manager (if not already installed)
+curl -fsSL https://pixi.sh/install.sh | bash
 
-# Or install with pip directly
+# Install dependencies with Pixi
+pixi install
+
+# Or install with pip directly (legacy)
 pip install -r requirements.txt  # For CPU
 pip install -r requirements-gpu.txt  # For GPU
 ```
 
 ### Code Quality Tools
 The project uses the following development dependencies (defined in pyproject.toml):
-- **black**: Code formatting (v21.9b0)
-- **flake8**: Linting (v4.0.1) 
-- **pycodestyle**: Style checking (v2.8.0)
+- **ruff**: Combined linting and formatting (10-100x faster than black/flake8)
 - **mypy**: Type checking (v0.910)
 
 ```bash
 # Format code
-poetry run black .
+pixi run ruff format .
 
 # Run linting
-poetry run flake8 .
+pixi run ruff check .
+
+# Fix auto-fixable issues
+pixi run ruff check --fix .
 
 # Run type checking
-poetry run mypy .
+pixi run mypy .
 
 # Run all quality checks together
-poetry run black . && poetry run flake8 . && poetry run mypy .
+pixi run check-all
 ```
 
 ### Running the Application
 ```bash
 # Convert YOLOv4 weights to TensorFlow model
-python save_model.py --model yolov4
+pixi run save-model
 
 # Run object tracker on video
-python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
+pixi run run-tracker
+
+# Run with custom parameters
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
 
 # Run with webcam (set video flag to 0)
-python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
+pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
 
 # Run with YOLOv4-tiny (faster but less accurate)
-python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 --video ./data/video/test.mp4 --output ./outputs/tiny.avi --tiny
+pixi run python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 --video ./data/video/test.mp4 --output ./outputs/tiny.avi --tiny
 ```
 
 ### Testing
@@ -85,7 +91,7 @@ from deep_sort.tracker import Tracker
 ```
 
 ### Formatting Conventions
-- Use Black for automatic formatting (line length 88)
+- Use Ruff for automatic formatting (line length 88)
 - 4-space indentation (no tabs)
 - Maximum line length: 88 characters
 - Use double quotes for strings and docstrings

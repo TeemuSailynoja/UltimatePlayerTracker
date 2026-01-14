@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
+import cv2
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import cv2
 
 ## These are some hard coded values for data/demo.avi
 # We make a transformation form the camera angle to a
@@ -63,7 +63,7 @@ class AnimatedScatter:
                 xy[:, 0],
                 xy[:, 1],
                 [0.5] * (len(row) // 2),
-                range((len(row) // 2)),
+                range(len(row) // 2),
             ]
 
     def update(self, i):

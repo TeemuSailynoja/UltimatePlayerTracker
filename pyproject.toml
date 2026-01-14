@@ -1,27 +1,54 @@
-[tool.poetry]
-name = "yolov4-deepsort"
-version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
 
-[tool.poetry.dependencies]
-python = "^3.8, <3.11"
-tqdm = "^4.62.3"
-opencv-python = "4.1.*"
-lxml = "^4.6.3"
-Pillow = "^8.4.0"
-matplotlib = "^3.4.3"
-absl-py = "^0.15.0"
-easydict = "^1.9"
-tensorflow = "2.3.0"
-pandas = "1.2-*"
 
-[tool.poetry.dev-dependencies]
-black = "^21.9b0"
-flake8 = "^4.0.1"
-pycodestyle = "^2.8.0"
-mypy = "^0.910"
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.pixi.dependencies]
+python = ">=3.8,<3.9"
+numpy = ">=1.16.0,<1.19.0"
+matplotlib = ">=3.4.0"
+pandas = ">=1.2.0"
+pillow = ">=8.4.0"
+mypy = ">=0.910"
+protobuf = "<=3.20.3"
+scipy = ">=1.5.0"
+
+[tool.pixi.pypi-dependencies]
+tensorflow-cpu = "~=2.3.0"
+opencv-python = "~=4.1.0"
+tqdm = ">=4.62.0"
+lxml = ">=4.6.0"
+absl-py = ">=0.15.0"
+easydict = ">=1.9"
+ruff = "*"
+
+[tool.pixi.tasks]
+format = "ruff format ."
+lint = "ruff check ."
+lint-fix = "ruff check --fix ."
+type-check = "mypy ."
+check-all = "ruff check --fix . && ruff format . && mypy ."
+run-tracker = "python object_tracker.py --video ./data/video/demo.mp4"
+save-model = "python save_model.py --model yolov4"
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C90", "UP"]
+ignore = ["E501", "B007", "B006", "B008", "UP031", "UP009", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"convert_trt.py" = ["E402", "F841"]
+"core/dataset.py" = ["W291"]
+"core/utils.py" = ["UP031"]
+"core/yolov4.py" = ["B006"]
+"core/common.py" = ["E702"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
