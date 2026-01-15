@@ -102,3 +102,27 @@ __C.TEST.DECTECTED_IMAGE_PATH = "./data/detection/"
 __C.TEST.SCORE_THRESHOLD = 0.25
 # IoU threshold for Non-Maximum Suppression (NMS) during testing
 __C.TEST.IOU_THRESHOLD = 0.5
+
+# YOLOv10-specific options
+__C.YOLOV10 = edict()
+
+# Model variant selection (n, s, m, b, l, x)
+__C.YOLOV10.MODEL_VARIANT = "yolov10s"
+# Detection confidence threshold
+__C.YOLOV10.CONFIDENCE_THRESHOLD = 0.25
+# IoU threshold for detection filtering
+__C.YOLOV10.IOU_THRESHOLD = 0.45
+# Hardware optimization target (auto, cpu, gpu, tensorrt)
+__C.YOLOV10.HARDWARE_TARGET = "auto"
+# Input image size
+__C.YOLOV10.INPUT_SIZE = 640
+# Enable half precision (FP16) for GPU
+__C.YOLOV10.HALF_PRECISION = True
+# Maximum detections per image
+__C.YOLOV10.MAX_DETECTIONS = 300
+# Target classes for Ultimate frisbee (person, sports ball)
+__C.YOLOV10.TARGET_CLASSES = [0, 37]
+# Export format for deployment (onnx, torchscript, coreml, tflite)
+__C.YOLOV10.EXPORT_FORMAT = "onnx"
+# DeepSORT compatibility mode
+__C.YOLOV10.DEEPSORT_COMPATIBLE = True
