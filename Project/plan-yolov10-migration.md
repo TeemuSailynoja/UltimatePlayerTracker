@@ -56,14 +56,14 @@ Frame → YOLOv10 (PyTorch/Ultralytics) → DetectionAdapter → DeepSORT → Vi
 **Estimated Time:** 1-2 days  
 **Assignee:** Junior Developer  
 **Requirements:**
-- [ ] Document current Python environment (freeze requirements)
-- [ ] Create new virtual environment for YOLO migration
-- [ ] Install Ultralytics framework and dependencies
+- [ ] Document current pixi environment configuration
+- [ ] Create new pixi environment for YOLO migration
+- [ ] Install Ultralytics framework and dependencies via pixi
 - [ ] Test basic YOLO model loading and inference
 - [ ] Write environment setup guide in `Project/environment-setup.md`
 
 **Deliverable:** 
-- Working development environment with modern YOLO
+- Working pixi environment with modern YOLO
 - Step-by-step setup documentation
 
 ### ☐ Task 1.3: Create Migration Branch
@@ -89,21 +89,22 @@ Frame → YOLOv10 (PyTorch/Ultralytics) → DetectionAdapter → DeepSORT → Vi
 - [ ] Update `pyproject.toml` with new dependencies
 - [ ] Remove TensorFlow-specific dependencies
 - [ ] Add PyTorch and Ultralytics packages
-- [ ] Update `requirements.txt` and `requirements-gpu.txt`
+- [ ] Update pixi tasks for new framework
 - [ ] Test dependency installation on clean environment
 
 **Code Changes Required:**
 ```toml
 # In pyproject.toml, REPLACE:
-[tool.poetry.dependencies]
-tensorflow = "2.3.0"
-opencv-python = "4.1.*"
+[tool.pixi.pypi-dependencies]
+tensorflow-cpu = "~=2.3.0"
+opencv-python = "~=4.1.0"
 
 # WITH:
-torch = "^2.0.0"
-torchvision = "^0.15.0"
-ultralytics = "^8.0.0"
-opencv-python = "^4.8.0"
+[tool.pixi.pypi-dependencies]
+torch = ">=2.0.0"
+torchvision = ">=0.15.0"
+ultralytics = ">=8.0.0"
+opencv-python = ">=4.8.0"
 ```
 
 ### ☐ Task 2.2: Update Project Structure
@@ -387,7 +388,7 @@ docs/
 - [ ] Remove deprecated YOLOv4 files after successful testing
 - [ ] Clean up unused imports and dependencies
 - [ ] Remove legacy configuration options
-- [ ] Update AGENTS.md with new build commands
+- [ ] Update AGENTS.md with new pixi task commands
 - [ ] Archive old code in separate branch
 
 ---
@@ -473,6 +474,8 @@ docs/
 
 ### Code Standards
 - **Follow existing project style** (see AGENTS.md)
+- **Use ruff for formatting and linting** (`pixi run ruff format .`, `pixi run ruff check .`)
+- **Use mypy for type checking** (`pixi run mypy .`)
 - **Write comprehensive tests** for all new code
 - **Add docstrings** to all functions and classes
 - **Use type hints** throughout the codebase

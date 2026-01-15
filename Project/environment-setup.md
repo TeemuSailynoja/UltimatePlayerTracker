@@ -1,76 +1,145 @@
 # Development Environment Setup Guide
 
-This guide helps set up a clean development environment for migrating UltimatePlayerTracker from YOLOv4 to modern YOLO (YOLOv10/YOLOv8).
+This guide covers setting up the development environment for UltimatePlayerTracker's YOLO migration using the pixi package manager and modern tooling.
 
-## Current Environment (To Be Replaced)
+## Current Environment Analysis
 
-The existing project uses outdated dependencies:
+The existing project uses pixi with outdated dependencies:
 - **TensorFlow 2.3.0** (July 2020)
-- **OpenCV 4.1.1.26** (outdated)
-- **Python 3.8-3.10** compatibility
-- **Custom YOLOv4 implementation**
+- **OpenCV 4.1.0** (outdated)
+- **Python 3.8** (as specified in pyproject.toml)
+- **Ruff** for linting and formatting
+- **MyPy** for type checking
 
-## New Environment Requirements
+## Prerequisites
 
-### Target Dependencies
+### System Requirements
+- **Python**: 3.8 (as specified in pyproject.toml)
+- **OS**: Linux-64 (current target), with plans for cross-platform support
+- **Hardware**: NVIDIA GPU (recommended) or CPU for development
+- **Memory**: 8GB+ RAM for model training and inference
+
+### Required Tools
+- **Pixi Package Manager**: Modern Python package management
+- **Git**: Version control
+- **CUDA**: 11.0+ (for GPU acceleration, optional)
+
+## Environment Setup
+
+### 1. Install Pixi Package Manager
+
 ```bash
-# New modern stack (to be installed)
-torch>=2.0.0
-torchvision>=0.15.0
-ultralytics>=8.0.0
-opencv-python>=4.8.0
-numpy>=1.21.0
-pandas>=1.3.0
-tqdm>=4.62.3
-matplotlib>=3.4.3
+# Install Pixi (if not already installed)
+curl -fsSL https://pixi.sh/install.sh | bash
+
+# Restart shell or source profile
+source ~/.bashrc
 ```
 
-### Removed Dependencies
+### 2. Clone Repository and Setup Environment
+
 ```bash
-# Legacy stack (to be removed)
-tensorflow==2.3.0
-opencv-python==4.1.*
+# Clone the repository
+git clone <repository-url>
+cd UltimatePlayerTracker
+
+# Create pixi environment and install dependencies
+pixi install
+
+# Verify installation
+pixi run python --version
+pixi run ruff --version
+pixi run mypy --version
 ```
 
-## Step-by-Step Environment Setup
+### 3. Current Environment Configuration
 
-### 1. Create Virtual Environment
+The project uses pixi with the following configuration:
 
-```bash
-# Using conda (recommended for GPU support)
-conda create -n yolov10-migration python=3.10
-conda activate yolov10-migration
+```toml
+# pyproject.toml (current)
+[tool.pixi.dependencies]
+python = ">=3.8,<3.9"
+numpy = ">=1.16.0,<1.19.0"
+matplotlib = ">=3.4.0"
+pandas = ">=1.2.0"
+pillow = ">=8.4.0"
+mypy = ">=0.910"
+protobuf = "<=3.20.3"
+scipy = ">=1.5.0"
 
-# Or using venv
-python -m venv venv_yolov10
-source venv_yolov10/bin/activate  # Linux/Mac
-# venv_yolov10\Scripts\activate  # Windows
+[tool.pixi.pypi-dependencies]
+tensorflow-cpu = "~=2.3.0"
+opencv-python = "~=4.1.0"
+tqdm = ">=4.62.0"
+lxml = ">=4.6.0"
+absl-py = ">=0.15.0"
+easydict = ">=1.9"
+ruff = "*"
 ```
 
-### 2. Install New Dependencies
+### 4. Development Tools Configuration
 
-#### Option A: Using Poetry (Recommended)
+#### Ruff (Linting & Formatting)
 ```bash
-# Navigate to project root
-cd /path/to/UltimatePlayerTracker
+# Format code
+pixi run ruff format .
 
-# Update pyproject.toml (see Task 2.1)
-poetry install
-poetry shell  # Activate virtual environment
+# Run linting
+pixi run ruff check .
+
+# Fix auto-fixable issues
+pixi run ruff check --fix .
+
+# Run all quality checks
+pixi run check-all
 ```
 
-#### Option B: Using Pip
+#### MyPy (Type Checking)
 ```bash
-# Install PyTorch (CUDA 11.8 - adjust for your CUDA version)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# Run type checking
+pixi run mypy .
+```
 
-# Install Ultralytics and other dependencies
-pip install ultralytics>=8.0.0
-pip install opencv-python>=4.8.0
-pip install numpy>=1.21.0
-pip install pandas>=1.3.0
-pip install tqdm>=4.62.3
-pip install matplotlib>=3.4.3
+## YOLO Migration Environment Setup
+
+### 1. Updated pyproject.toml for Migration
+
+```toml
+[tool.pixi.pypi-dependencies]
+# Replace TensorFlow with PyTorch
+torch = ">=2.0.0"
+torchvision = ">=0.15.0"
+ultralytics = ">=8.0.0"
+
+# Updated OpenCV
+opencv-python = ">=4.8.0"
+
+# Keep existing dependencies
+numpy = ">=1.16.0,<1.19.0"
+matplotlib = ">=3.4.0"
+pandas = ">=1.2.0"
+pillow = ">=8.4.0"
+tqdm = ">=4.62.0"
+lxml = ">=4.6.0"
+absl-py = ">=0.15.0"
+easydict = ">=1.9"
+
+# Development tools
+ruff = "*"
+mypy = ">=0.910"
+pytest = ">=7.0.0"
+```
+
+### 2. Install Updated Dependencies
+
+```bash
+# Update dependencies in pixi environment
+pixi install
+
+# Verify new installations
+pixi run python -c "import torch; print(f'PyTorch: {torch.__version__}')"
+pixi run python -c "from ultralytics import YOLO; print('Ultralytics installed successfully')"
 ```
 
 ### 3. Verify Installation
@@ -277,6 +346,131 @@ else:
     device = 'cuda'
 ```
 
+## Development Workflow
+
+### 1. Code Quality Pipeline
+
+```bash
+# Format code before commits
+pixi run ruff format .
+
+# Run linting
+pixi run ruff check .
+
+# Fix issues automatically
+pixi run ruff check --fix .
+
+# Run type checking
+pixi run mypy .
+
+# Run all checks together
+pixi run check-all
+```
+
+### 2. Testing YOLO Models
+
+```bash
+# Test YOLOv10 model loading
+pixi run python -c "
+from ultralytics import YOLO
+model = YOLO('yolov10s.pt')
+print(f'Model loaded: {model.names}')
+"
+
+# Test inference on sample image
+pixi run python -c "
+import cv2
+from ultralytics import YOLO
+
+model = YOLO('yolov10s.pt')
+image = cv2.imread('data/video/demo_frame.jpg')
+results = model(image)
+print(f'Inference successful: {len(results[0].boxes)} detections')
+"
+```
+
+### 3. Performance Benchmarking
+
+```bash
+# Benchmark YOLOv10 performance
+pixi run python -c "
+import time
+from ultralytics import YOLO
+
+model = YOLO('yolov10s.pt')
+image = 'data/video/demo_frame.jpg'
+
+# Warm up
+model(image)
+
+# Benchmark
+start_time = time.time()
+for _ in range(100):
+    model(image)
+end_time = time.time()
+
+avg_time = (end_time - start_time) / 100
+fps = 1.0 / avg_time
+print(f'Average inference time: {avg_time:.3f}s')
+print(f'Estimated FPS: {fps:.1f}')
+"
+```
+
+## Environment Management
+
+### 1. Environment Commands
+
+```bash
+# List all environments
+pixi list
+
+# Switch to migration environment
+pixi shell yolov10-migration
+
+# Remove environment (if needed)
+pixi remove yolov10-migration
+```
+
+### 2. Dependency Management
+
+```bash
+# Add new dependency
+pixi add <package-name>
+
+# Add development dependency
+pixi add --dev <package-name>
+
+# Remove dependency
+pixi remove <package-name>
+
+# Update dependencies
+pixi update
+```
+
+## Validation Checklist
+
+### Basic Functionality Tests
+- [ ] Python 3.8+ installed and working
+- [ ] PyTorch 2.0+ loads without errors
+- [ ] CUDA (if GPU) available and functional
+- [ ] Ultralytics YOLO loads models successfully
+- [ ] OpenCV operations work correctly
+- [ ] Basic inference pipeline runs without errors
+- [ ] Ruff formatting and linting work
+- [ ] MyPy type checking works
+
+### Performance Validation
+- [ ] GPU memory allocation works correctly
+- [ ] CPU inference performance is acceptable
+- [ ] YOLOv10 model loads and runs inference
+- [ ] Code quality tools function properly
+
+### Integration Tests
+- [ ] Can load sample video frames
+- [ ] Can run basic object detection
+- [ ] Can process detection results
+- [ ] No import errors or missing dependencies
+
 ## Next Steps
 
 After completing environment setup:
@@ -290,9 +484,11 @@ After completing environment setup:
 
 - **Ultralytics Documentation**: https://docs.ultralytics.com/
 - **PyTorch Installation**: https://pytorch.org/get-started/locally/
+- **Pixi Documentation**: https://pixi.sh/
 - **CUDA Toolkit**: https://developer.nvidia.com/cuda-toolkit
 - **Project Issues**: Create GitHub issues for blocking problems
 
 ---
 
 *Last Updated: January 15, 2026*
+*Updated for pixi-based workflow*
