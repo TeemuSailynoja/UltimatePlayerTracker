@@ -4,9 +4,8 @@ YOLOv10 Configuration
 Configuration management for YOLOv10 models and detection parameters.
 """
 
-import easydict
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

@@ -4,11 +4,12 @@ YOLOv10 Inference Wrapper
 Provides inference functionality for YOLOv10 models with DeepSORT integration.
 """
 
-import numpy as np
-import cv2
-from typing import List, Tuple, Optional, Dict, Any, Union
-import time
 import logging
+import time
+from typing import Any, Dict, List, Tuple
+
+import cv2
+import numpy as np
 
 logger = logging.getLogger(__name__)
 

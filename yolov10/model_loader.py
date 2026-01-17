@@ -5,11 +5,15 @@ Handles loading and management of YOLOv10 models with support for
 different variants and optimization targets.
 """
 
+import logging
+import warnings
+from typing import Any, Dict, Optional
+
 import torch
 from ultralytics import YOLO
-from typing import Optional, Union, Dict, Any
-from pathlib import Path
-import logging
+
+# Suppress ultralytics torch.load FutureWarning
+warnings.filterwarnings("ignore", category=FutureWarning, module="ultralytics.*")
 
 logger = logging.getLogger(__name__)
 

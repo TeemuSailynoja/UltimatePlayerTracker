@@ -4,9 +4,10 @@ YOLOv10 Detection Adapter
 Converts YOLOv10 output to DeepSORT compatible format.
 """
 
-import numpy as np
-from typing import Tuple, List, Optional, Dict, Any
 import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 

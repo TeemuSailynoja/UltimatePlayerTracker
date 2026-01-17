@@ -4,10 +4,11 @@ YOLOv10 Utility Functions
 Helper functions for YOLOv10 integration and common operations.
 """
 
-import numpy as np
-import cv2
-from typing import Tuple, List, Dict, Any, Optional, Union
 import logging
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import cv2
+import numpy as np
 
 logger = logging.getLogger(__name__)
 

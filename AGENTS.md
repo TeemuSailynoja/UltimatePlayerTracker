@@ -4,7 +4,7 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## Project Overview
 
-UltimatePlayerTracker is a Python-based object tracking system for Ultimate frisbee players using YOLOv4 for object detection and DeepSort for tracking. The project uses TensorFlow 2.3.0 and follows a computer vision pipeline architecture.
+UltimatePlayerTracker is a Python-based object tracking system for Ultimate frisbee players using YOLOv10 for object detection and DeepSort for tracking. The project uses PyTorch/Ultralytics and follows a modern computer vision pipeline architecture. Legacy YOLOv4/TensorFlow support is maintained for comparison purposes.
 
 ## Build/Lint/Test Commands
 
@@ -45,20 +45,23 @@ pixi run check-all
 
 ### Running the Application
 ```bash
-# Convert YOLOv4 weights to TensorFlow model
-pixi run save-model
+# Run object tracker with YOLOv10 (default)
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov10
 
-# Run object tracker on video
-pixi run run-tracker
-
-# Run with custom parameters
-pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
+# Download and export YOLOv10 model
+pixi run python save_model.py --model yolov10s --export_format onnx
 
 # Run with webcam (set video flag to 0)
-pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
+pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov10
 
-# Run with YOLOv4-tiny (faster but less accurate)
-pixi run python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 --video ./data/video/test.mp4 --output ./outputs/tiny.avi --tiny
+# Run with specific YOLOv10 variant
+pixi run python object_tracker.py --video ./data/video/test.mp4 --model yolov10n --device cuda
+
+# Run with custom parameters
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov10s --confidence 0.3 --iou 0.5
+
+# Legacy YOLOv4 support
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
 ```
 
 ### Testing
@@ -68,8 +71,8 @@ This project currently does not have formal unit tests. Testing is done by runni
 
 ### Import Organization
 - Standard library imports first (os, sys, time, etc.)
-- Third-party imports next (numpy, tensorflow, cv2, PIL, etc.)
-- Local imports last (core.*, deep_sort.*, tools.*)
+- Third-party imports next (numpy, torch, cv2, PIL, etc.)
+- Local imports last (core.*, deep_sort.*, yolov10.*, tools.*)
 - Use absolute imports for local modules
 - Group related imports together
 
@@ -80,14 +83,19 @@ import time
 
 # Third-party
 import numpy as np
-import tensorflow as tf
+import torch
 import cv2
 from PIL import Image
 
 # Local imports
 import core.utils as utils
-from core.yolov4 import filter_boxes
+from yolov10.model_loader import ModelLoader
+from yolov10.inference import YOLOv10Inference
+from yolov10.detection_adapter import DetectionAdapter
 from deep_sort.tracker import Tracker
+
+# Legacy YOLOv4 imports (when needed)
+# from core.yolov4 import filter_boxes
 ```
 
 ### Formatting Conventions
@@ -128,8 +136,14 @@ except:
 - Include parameter types and descriptions
 - Add brief usage examples for complex functions
 
-### TensorFlow Specific Guidelines
-- Use TensorFlow 2.x eager execution patterns
+### PyTorch Specific Guidelines
+- Use PyTorch 2.0+ patterns with automatic mixed precision
+- Configure device (CPU/CUDA/MPS) based on hardware availability
+- Use torch.nn for model components when building custom modules
+- Prefer Ultralytics patterns for YOLO model handling
+
+### TensorFlow Specific Guidelines (Legacy)
+- Use TensorFlow 2.3.0 for YOLOv4 legacy support only
 - Configure GPU memory growth to prevent allocation issues
 - Use tf.constant for fixed values, tf.Variable for trainable parameters
 - Prefer tf.keras layers when building models
@@ -145,18 +159,29 @@ except:
 - Define constants at module level when appropriate
 - Use command-line flags (absl.flags) for runtime parameters
 
+### Configuration Management
+- Use the cfg object from core.config for all configuration
+- Define constants at module level when appropriate
+- Use command-line flags (absl.flags) for runtime parameters
+
 ### File Organization
-- `core/`: YOLO model implementation and utilities
+- `core/`: YOLOv4 legacy implementation and utilities
 - `deep_sort/`: Tracking algorithm components
 - `tools/`: Helper scripts and utilities
+- `yolov10/`: YOLOv10 implementation modules
+  - `model_loader.py`: Model loading and management
+  - `inference.py`: YOLOv10 inference engine
+  - `detection_adapter.py`: DeepSORT compatibility layer
+  - `config.py`: YOLOv10 configuration
 - `data/`: Input data, weights, and class files
-- `checkpoints/`: Saved TensorFlow models
+- `checkpoints/`: Saved TensorFlow models (legacy)
 
 ### Performance Considerations
 - Minimize memory allocations in video processing loops
 - Use numpy operations instead of Python loops when possible
 - Pre-allocate arrays for repeated operations
 - Consider GPU memory usage for TensorFlow operations
+- For YOLOv10, leverage hardware auto-detection and optimization
 
 ### Testing and Validation
 - Test with sample videos before deploying
