@@ -4,7 +4,7 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## Project Overview
 
-UltimatePlayerTracker is a Python-based object tracking system for Ultimate frisbee players using YOLOv4 for object detection and DeepSort for tracking. The project uses TensorFlow 2.3.0 and follows a computer vision pipeline architecture.
+UltimatePlayerTracker is a Python-based object tracking system for Ultimate frisbee players using modern YOLO models (YOLOv8/YOLOv10/YOLOv26) for object detection and DeepSort for tracking. The project uses PyTorch with Ultralytics and follows a computer vision pipeline architecture.
 
 ## Build/Lint/Test Commands
 
@@ -13,13 +13,15 @@ UltimatePlayerTracker is a Python-based object tracking system for Ultimate fris
 # Install Pixi package manager (if not already installed)
 curl -fsSL https://pixi.sh/install.sh | bash
 
-# Install dependencies with Pixi
+# Install dependencies with Pixi (RECOMMENDED)
 pixi install
 
-# Or install with pip directly (legacy)
-pip install -r requirements.txt  # For CPU
-pip install -r requirements-gpu.txt  # For GPU
+# Legacy pip install (deprecated - TensorFlow no longer supported)
+# pip install -r requirements.txt  # For CPU
+# pip install -r requirements-gpu.txt  # For GPU
 ```
+
+**IMPORTANT**: The project has been fully migrated from TensorFlow to PyTorch. Use Pixi for environment management. TensorFlow dependencies are deprecated and should not be used.
 
 ### Code Quality Tools
 The project uses the following development dependencies (defined in pyproject.toml):
@@ -45,20 +47,38 @@ pixi run check-all
 
 ### Running the Application
 ```bash
-# Convert YOLOv4 weights to TensorFlow model
-pixi run save-model
+# Run object tracker on video (default YOLOv8-nano)
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi
 
-# Run object tracker on video
-pixi run run-tracker
-
-# Run with custom parameters
-pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov4
+# Run with specific model
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov8
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolov10
+pixi run python object_tracker.py --video ./data/video/demo.mp4 --output ./outputs/demo.avi --model yolo26
 
 # Run with webcam (set video flag to 0)
-pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov4
+pixi run python object_tracker.py --video 0 --output ./outputs/webcam.avi --model yolov8
 
-# Run with YOLOv4-tiny (faster but less accurate)
-pixi run python object_tracker.py --weights ./checkpoints/yolov4-tiny-416 --model yolov4 --video ./data/video/test.mp4 --output ./outputs/tiny.avi --tiny
+# Run with different model variants
+pixi run python object_tracker.py --video ./data/video/test.mp4 --output ./outputs/test.avi --model yolov8 --variant n
+pixi run python object_tracker.py --video ./data/video/test.mp4 --output ./outputs/test.avi --model yolov10 --variant s
+```
+
+### Running Benchmarks
+```bash
+# Run YOLOv8 benchmark (recommended for testing)
+pixi run python benchmark/yolo8_benchmark.py
+
+# Run modern YOLO comparison (YOLOv8 vs YOLOv10 vs YOLO26)
+pixi run python benchmark/modern_yolo_comparison.py
+
+# Run specific model families
+pixi run python benchmark/modern_yolo_comparison.py --models yolov8 yolov10
+
+# Run YOLO26-specific benchmarks
+pixi run python benchmark/yolo26_performance_benchmark.py
+
+# Check current status
+pixi run python benchmark/show_status.py
 ```
 
 ### Testing
@@ -68,8 +88,8 @@ This project currently does not have formal unit tests. Testing is done by runni
 
 ### Import Organization
 - Standard library imports first (os, sys, time, etc.)
-- Third-party imports next (numpy, tensorflow, cv2, PIL, etc.)
-- Local imports last (core.*, deep_sort.*, tools.*)
+- Third-party imports next (numpy, torch, cv2, PIL, etc.)
+- Local imports last (core.*, deep_sort.*, tools.*, yolov26.*)
 - Use absolute imports for local modules
 - Group related imports together
 
@@ -80,14 +100,16 @@ import time
 
 # Third-party
 import numpy as np
-import tensorflow as tf
+import torch
 import cv2
 from PIL import Image
+from ultralytics import YOLO
 
 # Local imports
 import core.utils as utils
-from core.yolov4 import filter_boxes
 from deep_sort.tracker import Tracker
+from yolov26.model_loader import ModelLoader
+from yolov26.inference import YOLO26Inference
 ```
 
 ### Formatting Conventions
@@ -111,7 +133,7 @@ from deep_sort.tracker import Tracker
 
 ### Error Handling
 - Use try-except blocks for file I/O and video operations
-- Handle TensorFlow GPU configuration gracefully
+- Handle PyTorch/CUDA device configuration gracefully
 - Provide meaningful error messages
 - Use specific exception types when possible
 
@@ -128,11 +150,12 @@ except:
 - Include parameter types and descriptions
 - Add brief usage examples for complex functions
 
-### TensorFlow Specific Guidelines
-- Use TensorFlow 2.x eager execution patterns
-- Configure GPU memory growth to prevent allocation issues
-- Use tf.constant for fixed values, tf.Variable for trainable parameters
-- Prefer tf.keras layers when building models
+### PyTorch/Ultralytics Specific Guidelines
+- Use PyTorch 2.x patterns with modern ultralytics API
+- Configure GPU memory efficiently with CUDA when available
+- Use torch tensors for model operations
+- Leverage ultralytics built-in optimizations and callbacks
+- Prefer model.export() for deployment optimizations
 
 ### Computer Vision Pipeline Patterns
 - Follow the detection → tracking → visualization pipeline
@@ -150,13 +173,14 @@ except:
 - `deep_sort/`: Tracking algorithm components
 - `tools/`: Helper scripts and utilities
 - `data/`: Input data, weights, and class files
-- `checkpoints/`: Saved TensorFlow models
+- `checkpoints/`: Saved models (legacy TensorFlow, now PyTorch)
 
 ### Performance Considerations
 - Minimize memory allocations in video processing loops
 - Use numpy operations instead of Python loops when possible
 - Pre-allocate arrays for repeated operations
-- Consider GPU memory usage for TensorFlow operations
+- Consider GPU memory usage for PyTorch operations
+- Leverage ultralytics built-in optimizations and callbacks
 
 ### Testing and Validation
 - Test with sample videos before deploying
@@ -166,10 +190,17 @@ except:
 
 ## Framework-Specific Notes
 
-### TensorFlow 2.3.0
-- This project uses an older TensorFlow version for compatibility
-- Avoid using newer TF features not available in 2.3.0
-- Use tf.compat.v1 for TF 1.x compatibility when needed
+### PyTorch 2.x
+- Uses modern PyTorch 2.x with latest optimizations
+- Supports dynamic computation graphs and eager execution
+- Excellent CUDA acceleration support
+- Compatible with latest ultralytics features
+
+### Ultralytics 8.x
+- Provides unified interface for YOLOv8/YOLOv10/YOLOv26
+- Built-in data augmentation and training utilities
+- Automatic model optimization and export capabilities
+- Active development and regular updates
 
 ### OpenCV
 - Use BGR format for OpenCV operations, convert to RGB when needed
