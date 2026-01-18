@@ -1,7 +1,7 @@
 """
-YOLOv10 Configuration
+YOLO26 Configuration
 
-Configuration management for YOLOv10 models and detection parameters.
+Configuration management for YOLO26 models and detection parameters.
 """
 
 from dataclasses import dataclass
@@ -9,18 +9,18 @@ from typing import Any, Dict, List, Optional
 
 
 @dataclass
-class YOLOv10Config:
+class YOLO26Config:
     """
-    Configuration class for YOLOv10 detection parameters.
+    Configuration class for YOLO26 detection parameters.
 
-    This class provides a centralized configuration system for YOLOv10 models,
+    This class provides a centralized configuration system for YOLO26 models,
     supporting different variants, hardware targets, and optimization settings.
     """
 
     # Model Configuration
-    model_variant: str = "yolov10s"  # n, s, m, b, l, x
+    model_variant: str = "yolo26s"  # n, s, m, l, x
     model_path: Optional[str] = None  # Custom model path
-    confidence_threshold: float = 0.25
+    confidence_threshold: float = 0.30  # Optimized for YOLO26
     iou_threshold: float = 0.45
 
     # Hardware Configuration
@@ -36,6 +36,11 @@ class YOLOv10Config:
     half_precision: bool = True  # FP16 for GPU
     optimize_for_speed: bool = True  # Optimize for inference speed
     max_det: int = 300  # Maximum detections per image
+
+    # YOLO26-specific Configuration
+    nms_free: bool = True  # Native NMS-free inference
+    small_object_optimized: bool = True  # STAL small-target-aware learning
+    progressive_loss: bool = True  # ProgLoss for better accuracy
 
     # Class Filtering (for Ultimate frisbee)
     target_classes: List[int] = None  # None = all classes
@@ -87,12 +92,12 @@ class YOLOv10Config:
             return "cpu"
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> "YOLOv10Config":
+    def from_dict(cls, config_dict: Dict[str, Any]) -> "YOLO26Config":
         """Create configuration from dictionary."""
         return cls(**config_dict)
 
     @classmethod
-    def from_args(cls, args) -> "YOLOv10Config":
+    def from_args(cls, args) -> "YOLO26Config":
         """Create configuration from command line arguments."""
         config_dict = {}
 
@@ -125,6 +130,9 @@ class YOLOv10Config:
             "batch_size": self.batch_size,
             "input_size": self.input_size,
             "half_precision": self.half_precision,
+            "nms_free": self.nms_free,
+            "small_object_optimized": self.small_object_optimized,
+            "progressive_loss": self.progressive_loss,
             "target_classes": self.target_classes,
             "export_format": self.export_format,
             "verbose": self.verbose,
@@ -136,12 +144,11 @@ class YOLOv10Config:
 
         # Validate model variant
         valid_variants = [
-            "yolov10n",
-            "yolov10s",
-            "yolov10m",
-            "yolov10b",
-            "yolov10l",
-            "yolov10x",
+            "yolo26n",
+            "yolo26s",
+            "yolo26m",
+            "yolo26l",
+            "yolo26x",
         ]
         if self.model_variant not in valid_variants:
             errors.append(f"Invalid model variant: {self.model_variant}")
@@ -169,43 +176,69 @@ class YOLOv10Config:
     def get_model_info(self) -> Dict[str, Any]:
         """Get model variant information."""
         model_specs = {
-            "yolov10n": {"params": "2.3M", "flops": "6.7B", "map": "39.5"},
-            "yolov10s": {"params": "7.2M", "flops": "21.6B", "map": "46.7"},
-            "yolov10m": {"params": "15.4M", "flops": "59.1B", "map": "51.3"},
-            "yolov10b": {"params": "24.4M", "flops": "92.0B", "map": "52.7"},
-            "yolov10l": {"params": "29.5M", "flops": "120.3B", "map": "53.3"},
-            "yolov10x": {"params": "56.9M", "flops": "160.4B", "map": "54.4"},
+            "yolo26n": {
+                "params": "2.4M",
+                "flops": "5.8B",
+                "map": "40.9",
+                "cpu_ms": "38.9",
+            },
+            "yolo26s": {
+                "params": "9.5M",
+                "flops": "18.2B",
+                "map": "48.6",
+                "cpu_ms": "87.2",
+            },
+            "yolo26m": {
+                "params": "15.4M",
+                "flops": "28.7B",
+                "map": "52.3",
+                "cpu_ms": "142.1",
+            },
+            "yolo26l": {
+                "params": "25.8M",
+                "flops": "46.3B",
+                "map": "54.7",
+                "cpu_ms": "238.4",
+            },
+            "yolo26x": {
+                "params": "54.2M",
+                "flops": "93.8B",
+                "map": "56.1",
+                "cpu_ms": "489.7",
+            },
         }
 
         return model_specs.get(self.model_variant, {})
 
-    def optimize_for_hardware(self) -> "YOLOv10Config":
+    def optimize_for_hardware(self) -> "YOLO26Config":
         """Optimize configuration based on detected hardware."""
         if self.device == "cpu":
-            # CPU optimizations
+            # CPU optimizations - YOLO26 excels here
             self.half_precision = False
             self.optimize_for_speed = True
             self.batch_size = 1
-            # Use smaller model for CPU
-            if self.model_variant in ["yolov10l", "yolov10x"]:
-                self.model_variant = "yolov10m"
+            self.nms_free = True  # NMS-free is major CPU advantage
+            # YOLO26 is so efficient we can use larger models on CPU
+            if self.model_variant in ["yolo26x"]:
+                self.model_variant = "yolo26l"
 
         elif self.device == "cuda":
             # GPU optimizations
             self.half_precision = True
             self.optimize_for_speed = True
+            self.nms_free = True
             # Can use larger models on GPU
-            if self.model_variant == "yolov10n":
-                self.model_variant = "yolov10s"
+            if self.model_variant == "yolo26n":
+                self.model_variant = "yolo26s"
 
         return self
 
-    def copy(self, **kwargs) -> "YOLOv10Config":
+    def copy(self, **kwargs) -> "YOLO26Config":
         """Create a copy of the configuration with optional updates."""
         config_dict = self.to_dict()
         config_dict.update(kwargs)
-        return YOLOv10Config.from_dict(config_dict)
+        return YOLO26Config.from_dict(config_dict)
 
 
 # Default configuration instance
-DEFAULT_CONFIG = YOLOv10Config()
+DEFAULT_CONFIG = YOLO26Config()
