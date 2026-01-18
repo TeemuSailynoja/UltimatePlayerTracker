@@ -13,7 +13,7 @@ from core.config import cfg
 class Dataset(object):
 
     def __init__(self, FLAGS, is_training: bool, dataset_type: str = "converted_coco"):
-    """
+        """
     Initializes the Dataset class with configuration parameters and loads annotations.
 
     Parameters:
